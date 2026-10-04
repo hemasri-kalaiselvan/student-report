@@ -28,7 +28,11 @@ textarea{min-height:140px}
 .chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
 .chip .tick{color:var(--ok)}.chip.on .tick{color:#fff}
 .row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
-.row .no{width:30px;color:var(--mute);font-size:14px}.row .nm{flex:1}
+.srow{display:grid;grid-template-columns:96px 1fr 42px;gap:6px;margin-bottom:6px;align-items:center}
+.srow.sh{font-size:13px;color:var(--mute);font-weight:600}
+.del{border:0;background:var(--badbg);color:var(--bad);border-radius:8px;height:42px;font-size:16px;cursor:pointer}
+summary{font-weight:600;cursor:pointer;padding:6px 0}
+.row .no{width:46px;color:var(--mute);font-size:14px}.row .nm{flex:1}
 .row input{width:84px;text-align:center;font-size:20px;padding:8px}
 .row input.err{border-color:var(--bad);background:var(--badbg)}
 .row input.fail{color:var(--bad);font-weight:700}.row input.ab{color:var(--warn);font-weight:700}
@@ -75,7 +79,8 @@ function blank(){return{school:'',cls:'',year:'2026-27',teacher:'',pass:35,
   subjects:['Tamil','English','Maths','Science','Social Science'],
   exams:[{id:'mid',name:'Mid Term',max:50},{id:'qtr',name:'Quarterly',max:100},{id:'half',name:'Half Yearly',max:100},{id:'ann',name:'Annual',max:100}],
   students:[],marks:{},nextId:1,lastBackup:null}}
-function load(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign(blank(),JSON.parse(r))}catch(e){}return blank()}
+function fix(d){(d.students||[]).forEach((s,i)=>{if(s.roll==null||s.roll==='')s.roll=String(i+1);s.roll=String(s.roll)});return d}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return fix(Object.assign(blank(),JSON.parse(r)))}catch(e){}return blank()}
 let S=load();
 let tab=S.students.length?'marks':'home';
 const ui={exam:'mid',subj:0,stu:null};
@@ -131,7 +136,7 @@ function lineChart(labels,series){
 function vHome(){
   const lb=S.lastBackup?new Date(S.lastBackup).toLocaleDateString():'never';
   return `${S.students.length?'':`<div class="card"><h2>👋 Welcome!</h2><ol>
-  <li>Fill your class details below.</li><li>Check the subject list.</li><li>Type student names, one per line.</li>
+  <li>Fill your class details below.</li><li>Check the subject list.</li><li>Type each student's roll number and name.</li>
   <li>Press <b>💾 Save details</b>, then tap <b>✏️ Marks</b> at the bottom.</li></ol>
   <p class="hint">Want to see how it works first?</p><button class="btn sec" onclick="loadSample()">▶ Try with a sample class</button></div>`}
   <div class="card"><h2>🏫 Class details</h2>
@@ -143,8 +148,14 @@ function vHome(){
   <div class="card"><h2>📚 Subjects</h2><p class="hint">One subject per line. Please don't rename a subject after entering its marks.</p>
   <textarea id="f_subj">${esc(S.subjects.join('\n'))}</textarea></div>
   <div class="card"><h2>📝 Exams & maximum marks</h2>${S.exams.map((x,i)=>`<label>${x.name} — out of</label><input id="f_max${i}" type="number" inputmode="numeric" value="${x.max}">`).join('')}</div>
-  <div class="card"><h2>👩‍🎓 Students (${S.students.length})</h2><p class="hint">One name per line, in roll-number order. You can copy-paste the name column from Excel.</p>
-  <textarea id="f_stu" style="min-height:220px">${esc(S.students.map(s=>s.name).join('\n'))}</textarea></div>
+  <div class="card"><h2>👩‍🎓 Students (${S.students.length})</h2><p class="hint">Type the roll number and name of each student. Tap <b>＋ Add student</b> for the next one. Tap ✕ to remove a row.</p>
+  <div class="srow sh"><span>Roll No.</span><span>Student name</span><span></span></div>
+  <div id="stuRows">${(S.students.length?S.students:[{}]).map(st=>stuRow(st.roll,st.name,st.id)).join('')}</div>
+  <button class="btn sec" style="width:100%" onclick="addRow()">＋ Add student</button>
+  <details style="margin-top:10px"><summary>📋 Have the list in Excel? Paste many students at once</summary>
+  <p class="hint">In Excel, select the two columns (Roll No. and Name), copy, and paste below. You can also type one student per line, like: <b>101 Priya</b></p>
+  <textarea id="f_paste" placeholder="101	Aarav&#10;102	Divya&#10;103	Karthik"></textarea>
+  <button class="btn sec" onclick="pasteRows()">Add these students to the list</button></details></div>
   <button class="btn" style="width:100%;padding:16px;font-size:18px" onclick="saveSetup()">💾 Save details</button>
   <div class="card ${S.students.length?'warnbox':''}" style="margin-top:14px"><h2>🛟 Backup (very important)</h2>
   <p class="hint">Marks are kept only on this phone/computer. After every exam, download a backup and send it to yourself on WhatsApp or save it in Google Drive.</p>
@@ -163,12 +174,31 @@ function saveSetup(){
   if(!subs.length){alert('Please type at least one subject.');return}
   S.subjects=[...new Set(subs)];
   for(let i=0;i<S.exams.length;i++){const m=+v('f_max'+i);if(!(m>0)){alert('Maximum marks for '+S.exams[i].name+' must be more than 0.');return}S.exams[i].max=m}
-  const names=v('f_stu').split('\n').map(l=>{const c=l.split('\t').map(x=>x.trim()).filter(Boolean);return (c.length?c[c.length-1]:'').replace(/^\d+[\s.)\-]*/,'').trim()}).filter(Boolean);
-  const pool=[...S.students];
-  S.students=names.map(n=>{const k=pool.findIndex(s=>s.name.toLowerCase()==n.toLowerCase());
-    if(k>=0)return Object.assign(pool.splice(k,1)[0],{name:n});return{id:S.nextId++,name:n}});
+  const rows=[...document.querySelectorAll('#stuRows .srow')].map(r=>({id:+r.dataset.id||null,roll:r.querySelector('.r').value.trim(),name:r.querySelector('.n').value.trim()})).filter(r=>r.roll||r.name);
+  const noName=rows.find(r=>!r.name);if(noName){alert('Please type the name for Roll No. '+noName.roll);return}
+  const noRoll=rows.find(r=>!r.roll);if(noRoll){alert('Please type the roll number for '+noRoll.name);return}
+  const seen={};for(const r of rows){const k=r.roll.toLowerCase();if(seen[k]){alert('Roll No. '+r.roll+' is used twice ('+seen[k]+' and '+r.name+'). Please correct it.');return}seen[k]=r.name}
+  const keep=new Set(rows.map(r=>r.id).filter(Boolean)),gone=S.students.filter(st=>!keep.has(st.id));
+  if(gone.length&&!confirm(gone.length+' student(s) were removed: '+gone.map(g=>g.name).join(', ')+'. Their marks will be hidden. Continue?'))return;
+  const byId={};S.students.forEach(st=>byId[st.id]=st);
+  S.students=rows.map(r=>{const st=(r.id&&byId[r.id])||{id:S.nextId++};st.roll=r.roll;st.name=r.name;return st});
+  S.students.sort((a,b)=>a.roll.localeCompare(b.roll,undefined,{numeric:true,sensitivity:'base'}));
   save();
   if(S.students.length)go('marks');else render()}
+
+function stuRow(roll,name,id){return `<div class="srow" data-id="${id||''}"><input class="r" placeholder="Roll" autocomplete="off" value="${esc(roll??'')}"><input class="n" placeholder="Name" autocomplete="off" value="${esc(name??'')}"><button class="del" onclick="this.parentNode.remove()" title="Remove">✕</button></div>`}
+function nextRoll(){const rs=[...document.querySelectorAll('#stuRows .r')].map(i=>i.value.trim()).filter(Boolean);if(!rs.length)return '1';
+  const last=rs[rs.length-1],m=last.match(/^(.*?)(\d+)$/);if(!m)return '';const n=String(+m[2]+1).padStart(m[2].length,'0');return m[1]+n}
+function addRow(){const box=document.getElementById('stuRows');const r=nextRoll();box.insertAdjacentHTML('beforeend',stuRow(r,''));const last=box.lastElementChild;last.querySelector(r?'.n':'.r').focus()}
+function pasteRows(){const ta=document.getElementById('f_paste'),box=document.getElementById('stuRows');let n=0;
+  [...box.querySelectorAll('.srow')].forEach(r=>{if(!r.querySelector('.r').value.trim()&&!r.querySelector('.n').value.trim())r.remove()});
+  ta.value.split('\n').forEach(line=>{if(!line.trim())return;let roll='',name='';
+    const c=line.split('\t').map(x=>x.trim()).filter(Boolean);
+    if(c.length>=2){roll=c[0];name=c.slice(1).join(' ')}
+    else{const m=line.trim().match(/^(\S*\d\S*)[\s,.)\-]+(.+)$/);if(m){roll=m[1].replace(/[.,)\-]+$/,'');name=m[2].trim()}else name=line.trim()}
+    if(/^roll/i.test(roll)&&/name/i.test(name))return;
+    box.insertAdjacentHTML('beforeend',stuRow(roll,name));n++});
+  ta.value='';flash(n+' students added — now tap 💾 Save details')}
 
 /* ---------- ENTER MARKS ---------- */
 function vMarks(){
@@ -183,7 +213,7 @@ function vMarks(){
   <p class="hint">Press <b>Next / Enter</b> on the keyboard to go to the next student. Tap <b>AB</b> if absent. Marks save automatically. Pass mark: ${passMark(ex)} (red = below pass).</p>
   <p><b id="prog">${done} of ${S.students.length} entered</b></p>
   ${S.students.map((st,i)=>{const v=gm(ex.id,sub,st.id),val=has(v)?v:'';
-    return `<div class="row"><span class="no">${i+1}</span><span class="nm">${esc(st.name)}</span>
+    return `<div class="row"><span class="no">${esc(st.roll)}</span><span class="nm">${esc(st.name)}</span>
     <input id="m${i}" data-sid="${st.id}" inputmode="decimal" enterkeyhint="next" autocomplete="off" value="${val}" class="${cls(String(val),ex)}" onchange="setMark(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();if(setMark(this)){const n=document.getElementById('m${i+1}');n?n.focus():this.blur()}}">
     <button class="abbtn" onclick="const e=document.getElementById('m${i}');e.value='AB';setMark(e)">AB</button></div>`}).join('')}
   ${ui.subj<S.subjects.length-1
@@ -224,9 +254,9 @@ function vExam(){
   const G=['A+','A','B','C','D','E'],GL=['90 & above','75–89','60–74','50–59','35–49','below 35'],GC=['#1a8f4c','#2e9e5b','#2457d6','#0891b2','#d97706','#c62828'];
   h+=`<div class="card"><h3>🎯 Grade distribution</h3>${bars(G.map((g,i)=>{const c=R.filter(r=>grade(r.pct)==g).length;return{label:g+'  ('+GL[i]+')',value:c/R.length*100,text:c+' students',color:GC[i]}}))}</div>`;
   const F=R.filter(r=>r.fails.length);
-  h+=`<div class="card"><h3>🙋 Students who need help (${F.length})</h3>${F.length?F.map(r=>row(esc(r.st.name),`<span class="f">${r.fails.map(esc).join(', ')}</span>`)).join(''):'<p class="p">Everyone passed all subjects 🎉</p>'}</div>`;
-  h+=`<div class="card"><h3>📋 Rank list</h3><div class="scroll"><table><tr><th>Rank</th><th class="l">Name</th>${S.subjects.map(s=>`<th>${esc(s)}</th>`).join('')}<th>Total</th><th>%</th><th>Grade</th><th>Result</th></tr>
-  ${R.map(r=>`<tr><td>${r.rank}</td><td class="l">${esc(r.st.name)}</td>${S.subjects.map(s=>{const v=gm(ex.id,s,r.st.id);return `<td class="${v==='AB'||(has(v)&&+v<passMark(ex))?'f':''}">${has(v)?v:'–'}</td>`}).join('')}
+  h+=`<div class="card"><h3>🙋 Students who need help (${F.length})</h3>${F.length?F.map(r=>row(esc(r.st.roll)+' · '+esc(r.st.name),`<span class="f">${r.fails.map(esc).join(', ')}</span>`)).join(''):'<p class="p">Everyone passed all subjects 🎉</p>'}</div>`;
+  h+=`<div class="card"><h3>📋 Rank list</h3><div class="scroll"><table><tr><th>Rank</th><th>Roll</th><th class="l">Name</th>${S.subjects.map(s=>`<th>${esc(s)}</th>`).join('')}<th>Total</th><th>%</th><th>Grade</th><th>Result</th></tr>
+  ${R.map(r=>`<tr><td>${r.rank}</td><td>${esc(r.st.roll)}</td><td class="l">${esc(r.st.name)}</td>${S.subjects.map(s=>{const v=gm(ex.id,s,r.st.id);return `<td class="${v==='AB'||(has(v)&&+v<passMark(ex))?'f':''}">${has(v)?v:'–'}</td>`}).join('')}
   <td><b>${r.tot}</b></td><td>${fmt(r.pct)}</td><td>${grade(r.pct)}</td><td>${!r.pass&&r.fails.length?'<span class="tag bad">Fail</span>':r.complete?'<span class="tag ok">Pass</span>':'<span class="tag w">Incomplete</span>'}</td></tr>`).join('')}</table></div></div>`;
   return h+`<button class="btn noprint" onclick="print()">🖨️ Print / Save as PDF</button>`}
 
@@ -251,8 +281,8 @@ function vAll(){
     const up=imp.filter(o=>o.ch>0).slice(0,5),dn=imp.filter(o=>o.ch<0).reverse().slice(0,5);
     h+=`<div class="card"><h3>🚀 Most improved</h3>${up.map(o=>row(esc(o.st.name),`<span class="p">▲ ${fmt(o.ch)}%</span>`)).join('')||'<p class="hint">No improvement yet.</p>'}
     <h3 style="margin-top:14px">⚠️ Marks dropping — talk to them</h3>${dn.map(o=>row(esc(o.st.name),`<span class="f">▼ ${fmt(-o.ch)}%</span>`)).join('')||'<p class="hint">Nobody is dropping 👍</p>'}</div>`}
-  h+=`<div class="card"><h3>🏅 Overall ranking (average of all exams)</h3><div class="scroll"><table><tr><th>Rank</th><th class="l">Name</th>${exs.map(x=>`<th>${x.name} %</th>`).join('')}<th>Overall %</th><th>Trend</th></tr>
-  ${O.map((o,i)=>`<tr><td>${i+1}</td><td class="l">${esc(o.st.name)}</td>${o.ps.map(p=>`<td>${fmt(p)}</td>`).join('')}<td><b>${fmt(o.avg)}</b></td><td>${trend(o.ch)}</td></tr>`).join('')}</table></div>
+  h+=`<div class="card"><h3>🏅 Overall ranking (average of all exams)</h3><div class="scroll"><table><tr><th>Rank</th><th>Roll</th><th class="l">Name</th>${exs.map(x=>`<th>${x.name} %</th>`).join('')}<th>Overall %</th><th>Trend</th></tr>
+  ${O.map((o,i)=>`<tr><td>${i+1}</td><td>${esc(o.st.roll)}</td><td class="l">${esc(o.st.name)}</td>${o.ps.map(p=>`<td>${fmt(p)}</td>`).join('')}<td><b>${fmt(o.avg)}</b></td><td>${trend(o.ch)}</td></tr>`).join('')}</table></div>
   <p class="hint">Trend compares the first exam with the latest one.</p></div>`;
   return h+`<button class="btn noprint" onclick="print()">🖨️ Print / Save as PDF</button>`}
 
@@ -262,9 +292,9 @@ function vStu(){
   if(!S.students.length)return need();
   if(!S.students.find(s=>s.id==ui.stu))ui.stu=S.students[0].id;
   const idx=S.students.findIndex(s=>s.id==ui.stu),st=S.students[idx],exs=S.exams.filter(x=>hasData(x.id));
-  let h=`<div class="card noprint"><h3>Choose a student</h3><select onchange="ui.stu=+this.value;render()">${S.students.map((s,i)=>`<option value="${s.id}" ${s.id==st.id?'selected':''}>${i+1}. ${esc(s.name)}</option>`).join('')}</select>
+  let h=`<div class="card noprint"><h3>Choose a student</h3><select onchange="ui.stu=+this.value;render()">${S.students.map((s,i)=>`<option value="${s.id}" ${s.id==st.id?'selected':''}>${esc(s.roll)} – ${esc(s.name)}</option>`).join('')}</select>
   <div style="display:flex;gap:8px;margin-top:8px"><button class="btn sec" style="flex:1" onclick="stuStep(-1)">◀ Previous</button><button class="btn sec" style="flex:1" onclick="stuStep(1)">Next ▶</button></div></div>`;
-  h+=printHead('Progress Report')+`<div class="card"><h2>${esc(st.name)}</h2><p class="hint">Roll No. ${idx+1}${S.cls?' · '+esc(S.cls):''}${S.year?' · '+esc(S.year):''}</p>`;
+  h+=printHead('Progress Report')+`<div class="card"><h2>${esc(st.name)}</h2><p class="hint">Roll No. ${esc(st.roll)}${S.cls?' · '+esc(S.cls):''}${S.year?' · '+esc(S.year):''}</p>`;
   if(!exs.length)return h+'<p class="hint">No marks entered yet.</p></div>';
   const res=exs.map(x=>result(x.id,st)),RK=exs.map(x=>ranked(x.id)),rk=RK.map(R=>{const r=R.find(r=>r.st.id==st.id);return r?r.rank+' / '+R.length:'–'});
   h+=`<div class="scroll"><table><tr><th class="l">Subject</th>${exs.map(x=>`<th>${x.name}<br><small>out of ${x.max}</small></th>`).join('')}</tr>
@@ -289,11 +319,11 @@ function backup(){S.lastBackup=Date.now();save();dl(new Blob([JSON.stringify(S,n
 function restore(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.students)||typeof d.marks!=='object')throw 0;
     if(!confirm('Restore this backup? It will replace the data on this device ('+d.students.length+' students).'))return;
-    S=Object.assign(blank(),d);save();flash('Backup restored ✓');go('exam')}catch(e){alert('This file is not a valid Mark Book backup.')}inp.value=''};
+    S=fix(Object.assign(blank(),d));save();flash('Backup restored ✓');go('exam')}catch(e){alert('This file is not a valid Mark Book backup.')}inp.value=''};
   r.readAsText(f)}
 function exportCSV(){
   const H=['Roll No','Name'];S.exams.forEach(x=>{S.subjects.forEach(s=>H.push(x.name+' - '+s));H.push(x.name+' - Total',x.name+' - %',x.name+' - Result')});
-  const rows=[H];S.students.forEach((st,i)=>{const r=[i+1,st.name];S.exams.forEach(x=>{S.subjects.forEach(s=>{const v=gm(x.id,s,st.id);r.push(has(v)?v:'')});
+  const rows=[H];S.students.forEach((st,i)=>{const r=[st.roll,st.name];S.exams.forEach(x=>{S.subjects.forEach(s=>{const v=gm(x.id,s,st.id);r.push(has(v)?v:'')});
     const R=result(x.id,st);r.push(R.entered?R.tot:'',R.entered?R.pct.toFixed(1):'',R.entered?(R.fails.length?'Fail':'Pass'):'')});rows.push(r)});
   const csv='\ufeff'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
   dl(new Blob([csv],{type:'text/csv'}),fname('Marks','csv'))}
@@ -306,7 +336,7 @@ function loadSample(){
   let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
   S=blank();S.school='Sample Govt. Hr. Sec. School';S.cls='8 - A (Sample)';S.teacher='Sample Teacher';
   const N=['Aarav','Divya','Karthik','Priya','Arjun','Meena','Rahul','Sneha','Vignesh','Kavya','Surya','Anitha','Harish','Lakshmi','Manoj','Nithya','Pranav','Revathi','Sanjay','Swathi','Tharun','Varsha','Yogesh','Deepika','Gokul','Ishwarya','Jeeva','Keerthana','Naveen','Pooja'];
-  S.students=N.map((n,i)=>({id:i+1,name:n}));S.nextId=N.length+1;
+  S.students=N.map((n,i)=>({id:i+1,roll:String(101+i),name:n}));S.nextId=N.length+1;
   const sb=S.subjects.map(()=>rnd()*12-6);
   S.students.forEach(st=>{const ab=.32+rnd()*.6,gr=(rnd()-.4)*6;
     S.exams.slice(0,3).forEach((x,ei)=>S.subjects.forEach((sub,si)=>{const k=x.id+'|'+sub+'|'+st.id;
