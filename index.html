@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Class Mark Book</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#1d2433;--mute:#667085;--line:#e3e7ef;--pri:#2457d6;--pri2:#e8eefc;--ok:#1a8f4c;--okbg:#e5f6ec;--bad:#c62828;--badbg:#fdecec;--warn:#b26a00;--warnbg:#fff4e0}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:17px}
+header{background:var(--pri);color:#fff;padding:14px 16px}
+header h1{margin:0;font-size:20px}header p{margin:2px 0 0;opacity:.85;font-size:14px}
+main{max-width:900px;margin:0 auto;padding:12px 12px 100px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:9}
+nav button{flex:1;border:0;background:none;padding:8px 2px 10px;font-size:12px;color:var(--mute);cursor:pointer}
+nav button b{display:block;font-size:22px;line-height:1.2}
+nav button.on{color:var(--pri);font-weight:700;background:var(--pri2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 12px}
+h2{font-size:19px;margin:4px 0 10px}h3{font-size:16px;margin:0 0 10px}
+label{display:block;font-weight:600;margin:10px 0 4px;font-size:15px}
+input,select,textarea{width:100%;font-size:17px;padding:10px;border:1.5px solid #c9d1e0;border-radius:10px;background:#fff;color:var(--ink);font-family:inherit}
+textarea{min-height:140px}
+.btn{display:inline-block;border:0;border-radius:10px;padding:12px 16px;font-size:16px;font-weight:600;background:var(--pri);color:#fff;cursor:pointer;margin:4px 6px 4px 0}
+.btn.sec{background:var(--pri2);color:var(--pri)}.btn.red{background:var(--badbg);color:var(--bad)}
+.hint{color:var(--mute);font-size:14px;margin:4px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid #c9d1e0;background:#fff;border-radius:22px;padding:10px 14px;font-size:15px;cursor:pointer;color:var(--ink)}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.chip .tick{color:var(--ok)}.chip.on .tick{color:#fff}
+.row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row .no{width:30px;color:var(--mute);font-size:14px}.row .nm{flex:1}
+.row input{width:84px;text-align:center;font-size:20px;padding:8px}
+.row input.err{border-color:var(--bad);background:var(--badbg)}
+.row input.fail{color:var(--bad);font-weight:700}.row input.ab{color:var(--warn);font-weight:700}
+.abbtn{border:1.5px solid #e3c48f;background:var(--warnbg);color:var(--warn);border-radius:8px;padding:8px 8px;font-size:13px;font-weight:700;cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(min-width:640px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.kpi small{color:var(--mute);font-size:13px}.kpi div{font-size:26px;font-weight:700;margin-top:2px}
+.bar{margin:9px 0}.bar .t{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:3px}
+.bar .track{background:#eef1f6;border-radius:6px;height:14px;overflow:hidden}.bar .fill{height:100%;border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{background:#f0f3f9}td.l,th.l{text-align:left}
+.scroll{overflow-x:auto}
+.f{color:var(--bad);font-weight:700}.p{color:var(--ok);font-weight:700}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:13px;font-weight:700}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.bad{background:var(--badbg);color:var(--bad)}.tag.w{background:var(--warnbg);color:var(--warn)}
+.top3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.top3 .card{margin:0;padding:10px}.medal{font-size:26px}
+.toast{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:var(--ok);color:#fff;padding:8px 16px;border-radius:20px;font-size:15px;opacity:0;transition:opacity .3s;z-index:20;pointer-events:none}
+.toast.show{opacity:1}.toast.bad{background:var(--bad)}
+.empty{text-align:center;padding:30px 10px;color:var(--mute)}
+.warnbox{background:var(--warnbg);border-color:#f0d29b}
+.printhead{display:none}
+@media print{nav,header,.noprint,.toast{display:none!important}body{background:#fff}main{padding:0}.card{border:1px solid #ccc;break-inside:avoid}.printhead{display:block;text-align:center;margin-bottom:10px}}
+</style>
+</head>
+<body>
+<header><h1 id="ht">Class Mark Book</h1><p id="hs"></p></header>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+<nav>
+  <button data-t="home" onclick="go('home')"><b>🏫</b>Setup</button>
+  <button data-t="marks" onclick="go('marks')"><b>✏️</b>Marks</button>
+  <button data-t="exam" onclick="go('exam')"><b>📊</b>Exam</button>
+  <button data-t="all" onclick="go('all')"><b>📈</b>All Exams</button>
+  <button data-t="stu" onclick="go('stu')"><b>🧑‍🎓</b>Student</button>
+</nav>
+
+<script>
+const KEY='classMarkBook_v1';
+const PAL=['#2457d6','#1a8f4c','#d97706','#9333ea','#dc2626','#0891b2','#be185d','#4d7c0f','#475569','#ea580c'];
+function blank(){return{school:'',cls:'',year:'2026-27',teacher:'',pass:35,
+  subjects:['Tamil','English','Maths','Science','Social Science'],
+  exams:[{id:'mid',name:'Mid Term',max:50},{id:'qtr',name:'Quarterly',max:100},{id:'half',name:'Half Yearly',max:100},{id:'ann',name:'Annual',max:100}],
+  students:[],marks:{},nextId:1,lastBackup:null}}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return Object.assign(blank(),JSON.parse(r))}catch(e){}return blank()}
+let S=load();
+let tab=S.students.length?'marks':'home';
+const ui={exam:'mid',subj:0,stu:null};
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=p=>p==null||isNaN(p)?'–':(+p).toFixed(1);
+let tt;
+function flash(msg,bad){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(bad?' bad':'');clearTimeout(tt);tt=setTimeout(()=>t.className='toast',1600)}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));flash('Saved ✓')}catch(e){flash('⚠ Could not save — please download a backup',true)}}
+function go(t){tab=t;render();scrollTo(0,0)}
+const exam=id=>S.exams.find(x=>x.id==id);
+const gm=(e,sub,sid)=>S.marks[e+'|'+sub+'|'+sid];
+const has=v=>v!==undefined&&v!=='';
+const passMark=ex=>Math.ceil(ex.max*S.pass/100);
+const hasData=eid=>Object.keys(S.marks).some(k=>k.startsWith(eid+'|'));
+function grade(p){return p>=90?'A+':p>=75?'A':p>=60?'B':p>=50?'C':p>=35?'D':'E'}
+function colorFor(p){return p>=75?'#1a8f4c':p>=60?'#2457d6':p>=S.pass?'#d97706':'#c62828'}
+function cls(val,ex){if(val==='AB')return 'ab';if(val!==''&&+val<passMark(ex))return 'fail';return ''}
+
+function result(eid,st){const ex=exam(eid);let tot=0,entered=0;const fails=[];
+  S.subjects.forEach(sub=>{const v=gm(eid,sub,st.id);if(!has(v))return;entered++;
+    if(v==='AB'){fails.push(sub+' (AB)');return}tot+=+v;if(+v<passMark(ex))fails.push(sub)});
+  const max=entered*ex.max;
+  return{tot,max,pct:max?tot/max*100:null,fails,entered,complete:entered==S.subjects.length,pass:entered>0&&!fails.length}}
+function ranked(eid){
+  const R=S.students.map((st,i)=>Object.assign({st,roll:i+1},result(eid,st))).filter(r=>r.entered>0);
+  R.sort((a,b)=>b.pct-a.pct||a.roll-b.roll);
+  let prev=null,rk=0;R.forEach((r,i)=>{const k=r.pct.toFixed(2);if(k!==prev){rk=i+1;prev=k}r.rank=rk});return R}
+
+function bars(items){return items.map(it=>`<div class="bar"><div class="t"><span>${esc(it.label)}</span><b>${it.text}</b></div><div class="track"><div class="fill" style="width:${Math.max(0,Math.min(100,it.value||0))}%;background:${it.color}"></div></div></div>`).join('')}
+function row(a,b){return `<div class="row"><span class="nm">${a}</span><span style="text-align:right;white-space:normal">${b}</span></div>`}
+function trend(ch){if(ch==null)return '–';if(ch>=2)return `<span class="p">▲ ${fmt(ch)}</span>`;if(ch<=-2)return `<span class="f">▼ ${fmt(-ch)}</span>`;return '● steady'}
+function emptyMsg(t,s){return `<div class="card empty"><div style="font-size:40px">📭</div><h3>${t}</h3><p>${s}</p></div>`}
+function need(){return emptyMsg('No students yet','Go to 🏫 Setup and type your student names.')+`<button class="btn" onclick="go('home')">Go to Setup</button>`}
+function printHead(t){return `<div class="printhead"><h2>${esc(S.school||'School')}</h2><p>${esc(S.cls)} · ${esc(S.year)} · ${esc(t)}${S.teacher?' · Teacher: '+esc(S.teacher):''}</p></div>`}
+
+function lineChart(labels,series){
+  const W=340,H=200,L=34,R=14,T=12,B=28,n=labels.length;
+  const x=i=>n==1?(L+W-R)/2:L+i*(W-L-R)/(n-1),y=v=>T+(100-v)*(H-T-B)/100;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:560px;display:block;margin:auto">`;
+  [0,25,50,75,100].forEach(g=>{s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="#e3e7ef"/><text x="${L-6}" y="${y(g)+4}" font-size="10" text-anchor="end" fill="#667085">${g}</text>`});
+  labels.forEach((l,i)=>{s+=`<text x="${x(i)}" y="${H-8}" font-size="10" text-anchor="middle" fill="#667085">${esc(l)}</text>`});
+  series.forEach(se=>{const pts=se.values.map((v,i)=>v==null?null:[x(i),y(v)]);let d='';
+    pts.forEach(p=>{if(p)d+=(d?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)});
+    s+=`<path d="${d}" fill="none" stroke="${se.color}" stroke-width="2.5"/>`;
+    pts.forEach((p,i)=>{if(p)s+=`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${se.color}"><title>${esc(se.name)}: ${fmt(se.values[i])}%</title></circle>`})});
+  s+='</svg>';
+  s+=`<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;font-size:13px;margin-top:6px">${series.map(se=>`<span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${se.color};vertical-align:-1px"></span> ${esc(se.name)}</span>`).join('')}</div>`;
+  return s}
+
+/* ---------- SETUP ---------- */
+function vHome(){
+  const lb=S.lastBackup?new Date(S.lastBackup).toLocaleDateString():'never';
+  return `${S.students.length?'':`<div class="card"><h2>👋 Welcome!</h2><ol>
+  <li>Fill your class details below.</li><li>Check the subject list.</li><li>Type student names, one per line.</li>
+  <li>Press <b>💾 Save details</b>, then tap <b>✏️ Marks</b> at the bottom.</li></ol>
+  <p class="hint">Want to see how it works first?</p><button class="btn sec" onclick="loadSample()">▶ Try with a sample class</button></div>`}
+  <div class="card"><h2>🏫 Class details</h2>
+  <label>School name</label><input id="f_school" value="${esc(S.school)}">
+  <label>Class & section</label><input id="f_cls" placeholder="e.g. 8 - B" value="${esc(S.cls)}">
+  <label>Academic year</label><input id="f_year" value="${esc(S.year)}">
+  <label>Teacher name</label><input id="f_teacher" value="${esc(S.teacher)}">
+  <label>Pass mark (%)</label><input id="f_pass" type="number" inputmode="numeric" value="${S.pass}"></div>
+  <div class="card"><h2>📚 Subjects</h2><p class="hint">One subject per line. Please don't rename a subject after entering its marks.</p>
+  <textarea id="f_subj">${esc(S.subjects.join('\n'))}</textarea></div>
+  <div class="card"><h2>📝 Exams & maximum marks</h2>${S.exams.map((x,i)=>`<label>${x.name} — out of</label><input id="f_max${i}" type="number" inputmode="numeric" value="${x.max}">`).join('')}</div>
+  <div class="card"><h2>👩‍🎓 Students (${S.students.length})</h2><p class="hint">One name per line, in roll-number order. You can copy-paste the name column from Excel.</p>
+  <textarea id="f_stu" style="min-height:220px">${esc(S.students.map(s=>s.name).join('\n'))}</textarea></div>
+  <button class="btn" style="width:100%;padding:16px;font-size:18px" onclick="saveSetup()">💾 Save details</button>
+  <div class="card ${S.students.length?'warnbox':''}" style="margin-top:14px"><h2>🛟 Backup (very important)</h2>
+  <p class="hint">Marks are kept only on this phone/computer. After every exam, download a backup and send it to yourself on WhatsApp or save it in Google Drive.</p>
+  <p><b>Last backup: ${lb}</b></p>
+  <button class="btn" onclick="backup()">⬇️ Download backup</button>
+  <button class="btn sec" onclick="document.getElementById('rf').click()">⬆️ Restore backup</button>
+  <input type="file" id="rf" accept=".json,application/json" style="display:none" onchange="restore(this)">
+  <button class="btn sec" onclick="exportCSV()">📊 Export all marks to Excel</button><br>
+  <button class="btn red" onclick="clearAll()">🗑️ Start a new class (erase everything)</button></div>`}
+
+function saveSetup(){
+  const v=id=>document.getElementById(id).value.trim();
+  S.school=v('f_school');S.cls=v('f_cls');S.year=v('f_year');S.teacher=v('f_teacher');
+  const p=+v('f_pass');if(p>0&&p<100)S.pass=p;
+  const subs=v('f_subj').split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!subs.length){alert('Please type at least one subject.');return}
+  S.subjects=[...new Set(subs)];
+  for(let i=0;i<S.exams.length;i++){const m=+v('f_max'+i);if(!(m>0)){alert('Maximum marks for '+S.exams[i].name+' must be more than 0.');return}S.exams[i].max=m}
+  const names=v('f_stu').split('\n').map(l=>{const c=l.split('\t').map(x=>x.trim()).filter(Boolean);return (c.length?c[c.length-1]:'').replace(/^\d+[\s.)\-]*/,'').trim()}).filter(Boolean);
+  const pool=[...S.students];
+  S.students=names.map(n=>{const k=pool.findIndex(s=>s.name.toLowerCase()==n.toLowerCase());
+    if(k>=0)return Object.assign(pool.splice(k,1)[0],{name:n});return{id:S.nextId++,name:n}});
+  save();
+  if(S.students.length)go('marks');else render()}
+
+/* ---------- ENTER MARKS ---------- */
+function vMarks(){
+  if(!S.students.length)return need();
+  const ex=exam(ui.exam),sub=S.subjects[ui.subj];
+  const done=S.students.filter(s=>has(gm(ex.id,sub,s.id))).length;
+  return `<div class="card"><h3>1. Choose the exam</h3><div class="chips">${S.exams.map(x=>`<button class="chip ${x.id==ui.exam?'on':''}" onclick="ui.exam='${x.id}';render()">${x.name}</button>`).join('')}</div>
+  <h3 style="margin-top:14px">2. Choose the subject</h3><div class="chips">${S.subjects.map((s,i)=>{const full=S.students.every(st=>has(gm(ex.id,s,st.id)));
+    return `<button class="chip ${i==ui.subj?'on':''}" onclick="ui.subj=${i};render()">${full?'<span class="tick">✔</span> ':''}${esc(s)}</button>`}).join('')}</div>
+  <p class="hint">✔ = all marks entered for that subject.</p></div>
+  <div class="card"><h3>3. Type marks — ${esc(sub)}, ${ex.name} (out of ${ex.max})</h3>
+  <p class="hint">Press <b>Next / Enter</b> on the keyboard to go to the next student. Tap <b>AB</b> if absent. Marks save automatically. Pass mark: ${passMark(ex)} (red = below pass).</p>
+  <p><b id="prog">${done} of ${S.students.length} entered</b></p>
+  ${S.students.map((st,i)=>{const v=gm(ex.id,sub,st.id),val=has(v)?v:'';
+    return `<div class="row"><span class="no">${i+1}</span><span class="nm">${esc(st.name)}</span>
+    <input id="m${i}" data-sid="${st.id}" inputmode="decimal" enterkeyhint="next" autocomplete="off" value="${val}" class="${cls(String(val),ex)}" onchange="setMark(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();if(setMark(this)){const n=document.getElementById('m${i+1}');n?n.focus():this.blur()}}">
+    <button class="abbtn" onclick="const e=document.getElementById('m${i}');e.value='AB';setMark(e)">AB</button></div>`}).join('')}
+  ${ui.subj<S.subjects.length-1
+    ?`<button class="btn" style="width:100%;margin-top:12px" onclick="ui.subj++;render();scrollTo(0,0)">Next subject: ${esc(S.subjects[ui.subj+1])} →</button>`
+    :`<button class="btn" style="width:100%;margin-top:12px" onclick="go('exam')">Done — see the ${ex.name} report →</button>`}</div>`}
+
+function setMark(el){
+  const ex=exam(ui.exam),sub=S.subjects[ui.subj],k=ex.id+'|'+sub+'|'+el.dataset.sid;
+  let v=el.value.trim().toUpperCase();
+  if(v===''){delete S.marks[k]}
+  else if(v==='A'||v==='AB'){S.marks[k]='AB';el.value='AB'}
+  else{const n=Number(v);if(isNaN(n)||n<0||n>ex.max){el.className='err';flash('Marks must be between 0 and '+ex.max,true);return false}S.marks[k]=n;el.value=n}
+  el.className=cls(el.value,ex);save();
+  const d=S.students.filter(s=>has(gm(ex.id,sub,s.id))).length;
+  document.getElementById('prog').textContent=d+' of '+S.students.length+' entered';
+  return true}
+
+/* ---------- EXAM DASHBOARD ---------- */
+function examChips(){return `<div class="card noprint"><h3>Choose the exam</h3><div class="chips">${S.exams.map(x=>`<button class="chip ${x.id==ui.exam?'on':''}" onclick="ui.exam='${x.id}';render()">${x.name}${hasData(x.id)?'':' <small>(no marks)</small>'}</button>`).join('')}</div></div>`}
+function vExam(){
+  if(!S.students.length)return need();
+  const ex=exam(ui.exam);let h=examChips();const R=ranked(ex.id);
+  if(!R.length)return h+emptyMsg('No marks yet for '+ex.name,'Tap ✏️ Marks below to enter them.');
+  const avg=R.reduce((a,r)=>a+r.pct,0)/R.length,passN=R.filter(r=>r.pass).length;
+  h+=printHead(ex.name+' — Result Analysis');
+  h+=`<div class="kpis"><div class="kpi"><small>Students appeared</small><div>${R.length}<span style="font-size:15px;color:var(--mute)"> / ${S.students.length}</span></div></div>
+  <div class="kpi"><small>Class average</small><div>${fmt(avg)}%</div></div>
+  <div class="kpi"><small>Passed all subjects</small><div>${Math.round(passN/R.length*100)}%</div></div>
+  <div class="kpi"><small>Highest</small><div>${fmt(R[0].pct)}%</div></div></div>`;
+  const SA=S.subjects.map(sub=>{const vals=S.students.map(st=>gm(ex.id,sub,st.id)).filter(has);const nums=vals.filter(v=>v!=='AB').map(Number);
+    return{sub,n:vals.length,avg:nums.length?nums.reduce((a,b)=>a+b,0)/nums.length/ex.max*100:null,pass:vals.length?vals.filter(v=>v!=='AB'&&+v>=passMark(ex)).length/vals.length*100:null}});
+  const miss=SA.filter(s=>s.n<S.students.length);
+  if(miss.length)h+=`<div class="card warnbox"><b>⚠ Some marks are not entered yet:</b><br>${miss.map(s=>esc(s.sub)+' ('+(S.students.length-s.n)+' missing)').join(', ')}</div>`;
+  const md=['🥇','🥈','🥉'];
+  h+=`<div class="card"><h3>🏆 Toppers</h3><div class="top3">${R.slice(0,3).map(r=>`<div class="card"><div class="medal">${md[r.rank-1]||'🏅'}</div><b>${esc(r.st.name)}</b><div>${fmt(r.pct)}%</div><small class="hint">${r.tot} / ${r.max}</small></div>`).join('')}</div></div>`;
+  h+=`<div class="card"><h3>📚 Subject-wise class average</h3>${bars(SA.filter(s=>s.n).map(s=>({label:s.sub,value:s.avg,text:fmt(s.avg)+'% · pass '+Math.round(s.pass)+'%',color:colorFor(s.avg||0)})))}
+  <p class="hint">Green = very good · Blue = good · Orange = average · Red = needs attention</p></div>`;
+  const G=['A+','A','B','C','D','E'],GL=['90 & above','75–89','60–74','50–59','35–49','below 35'],GC=['#1a8f4c','#2e9e5b','#2457d6','#0891b2','#d97706','#c62828'];
+  h+=`<div class="card"><h3>🎯 Grade distribution</h3>${bars(G.map((g,i)=>{const c=R.filter(r=>grade(r.pct)==g).length;return{label:g+'  ('+GL[i]+')',value:c/R.length*100,text:c+' students',color:GC[i]}}))}</div>`;
+  const F=R.filter(r=>r.fails.length);
+  h+=`<div class="card"><h3>🙋 Students who need help (${F.length})</h3>${F.length?F.map(r=>row(esc(r.st.name),`<span class="f">${r.fails.map(esc).join(', ')}</span>`)).join(''):'<p class="p">Everyone passed all subjects 🎉</p>'}</div>`;
+  h+=`<div class="card"><h3>📋 Rank list</h3><div class="scroll"><table><tr><th>Rank</th><th class="l">Name</th>${S.subjects.map(s=>`<th>${esc(s)}</th>`).join('')}<th>Total</th><th>%</th><th>Grade</th><th>Result</th></tr>
+  ${R.map(r=>`<tr><td>${r.rank}</td><td class="l">${esc(r.st.name)}</td>${S.subjects.map(s=>{const v=gm(ex.id,s,r.st.id);return `<td class="${v==='AB'||(has(v)&&+v<passMark(ex))?'f':''}">${has(v)?v:'–'}</td>`}).join('')}
+  <td><b>${r.tot}</b></td><td>${fmt(r.pct)}</td><td>${grade(r.pct)}</td><td>${!r.pass&&r.fails.length?'<span class="tag bad">Fail</span>':r.complete?'<span class="tag ok">Pass</span>':'<span class="tag w">Incomplete</span>'}</td></tr>`).join('')}</table></div></div>`;
+  return h+`<button class="btn noprint" onclick="print()">🖨️ Print / Save as PDF</button>`}
+
+/* ---------- ALL EXAMS ---------- */
+function vAll(){
+  if(!S.students.length)return need();
+  const exs=S.exams.filter(x=>hasData(x.id));
+  if(!exs.length)return emptyMsg('No marks entered yet','Enter marks for any exam to see the full-year picture.');
+  const RS={};exs.forEach(x=>RS[x.id]=ranked(x.id));
+  let h=printHead('All Exams — Year Summary');
+  const ca=exs.map(x=>RS[x.id].reduce((a,r)=>a+r.pct,0)/RS[x.id].length);
+  const pr=exs.map(x=>RS[x.id].filter(r=>r.pass).length/RS[x.id].length*100);
+  h+=`<div class="kpis">${exs.map((x,i)=>`<div class="kpi"><small>${x.name} average</small><div style="color:${colorFor(ca[i])}">${fmt(ca[i])}%</div><small>Pass ${Math.round(pr[i])}%</small></div>`).join('')}</div>`;
+  h+=`<div class="card"><h3>📈 Class performance across exams</h3>${lineChart(exs.map(x=>x.name),[{name:'Class average %',values:ca,color:'#2457d6'},{name:'Pass %',values:pr,color:'#1a8f4c'}])}</div>`;
+  const sv=(x,sub)=>{const n=S.students.map(st=>gm(x.id,sub,st.id)).filter(v=>has(v)&&v!=='AB').map(Number);return n.length?n.reduce((a,b)=>a+b,0)/n.length/x.max*100:null};
+  h+=`<div class="card"><h3>📚 Subject averages in each exam (%)</h3>${lineChart(exs.map(x=>x.name),S.subjects.map((s,i)=>({name:s,values:exs.map(x=>sv(x,s)),color:PAL[i%PAL.length]})))}
+  <div class="scroll" style="margin-top:10px"><table><tr><th class="l">Subject</th>${exs.map(x=>`<th>${x.name}</th>`).join('')}</tr>
+  ${S.subjects.map(s=>`<tr><td class="l">${esc(s)}</td>${exs.map(x=>{const v=sv(x,s);return `<td style="${v==null?'':'background:'+colorFor(v)+'22'}">${fmt(v)}</td>`}).join('')}</tr>`).join('')}</table></div></div>`;
+  const O=S.students.map(st=>{const ps=exs.map(x=>{const r=result(x.id,st);return r.entered?r.pct:null});const g=ps.filter(p=>p!=null);
+    return{st,ps,avg:g.length?g.reduce((a,b)=>a+b,0)/g.length:null,ch:g.length>1?g[g.length-1]-g[0]:null}}).filter(o=>o.avg!=null).sort((a,b)=>b.avg-a.avg);
+  if(exs.length>1){const imp=O.filter(o=>o.ch!=null).sort((a,b)=>b.ch-a.ch);
+    const up=imp.filter(o=>o.ch>0).slice(0,5),dn=imp.filter(o=>o.ch<0).reverse().slice(0,5);
+    h+=`<div class="card"><h3>🚀 Most improved</h3>${up.map(o=>row(esc(o.st.name),`<span class="p">▲ ${fmt(o.ch)}%</span>`)).join('')||'<p class="hint">No improvement yet.</p>'}
+    <h3 style="margin-top:14px">⚠️ Marks dropping — talk to them</h3>${dn.map(o=>row(esc(o.st.name),`<span class="f">▼ ${fmt(-o.ch)}%</span>`)).join('')||'<p class="hint">Nobody is dropping 👍</p>'}</div>`}
+  h+=`<div class="card"><h3>🏅 Overall ranking (average of all exams)</h3><div class="scroll"><table><tr><th>Rank</th><th class="l">Name</th>${exs.map(x=>`<th>${x.name} %</th>`).join('')}<th>Overall %</th><th>Trend</th></tr>
+  ${O.map((o,i)=>`<tr><td>${i+1}</td><td class="l">${esc(o.st.name)}</td>${o.ps.map(p=>`<td>${fmt(p)}</td>`).join('')}<td><b>${fmt(o.avg)}</b></td><td>${trend(o.ch)}</td></tr>`).join('')}</table></div>
+  <p class="hint">Trend compares the first exam with the latest one.</p></div>`;
+  return h+`<button class="btn noprint" onclick="print()">🖨️ Print / Save as PDF</button>`}
+
+/* ---------- STUDENT REPORT CARD ---------- */
+function stuStep(d){const i=S.students.findIndex(s=>s.id==ui.stu);const j=Math.max(0,Math.min(S.students.length-1,i+d));ui.stu=S.students[j].id;render()}
+function vStu(){
+  if(!S.students.length)return need();
+  if(!S.students.find(s=>s.id==ui.stu))ui.stu=S.students[0].id;
+  const idx=S.students.findIndex(s=>s.id==ui.stu),st=S.students[idx],exs=S.exams.filter(x=>hasData(x.id));
+  let h=`<div class="card noprint"><h3>Choose a student</h3><select onchange="ui.stu=+this.value;render()">${S.students.map((s,i)=>`<option value="${s.id}" ${s.id==st.id?'selected':''}>${i+1}. ${esc(s.name)}</option>`).join('')}</select>
+  <div style="display:flex;gap:8px;margin-top:8px"><button class="btn sec" style="flex:1" onclick="stuStep(-1)">◀ Previous</button><button class="btn sec" style="flex:1" onclick="stuStep(1)">Next ▶</button></div></div>`;
+  h+=printHead('Progress Report')+`<div class="card"><h2>${esc(st.name)}</h2><p class="hint">Roll No. ${idx+1}${S.cls?' · '+esc(S.cls):''}${S.year?' · '+esc(S.year):''}</p>`;
+  if(!exs.length)return h+'<p class="hint">No marks entered yet.</p></div>';
+  const res=exs.map(x=>result(x.id,st)),RK=exs.map(x=>ranked(x.id)),rk=RK.map(R=>{const r=R.find(r=>r.st.id==st.id);return r?r.rank+' / '+R.length:'–'});
+  h+=`<div class="scroll"><table><tr><th class="l">Subject</th>${exs.map(x=>`<th>${x.name}<br><small>out of ${x.max}</small></th>`).join('')}</tr>
+  ${S.subjects.map(s=>`<tr><td class="l">${esc(s)}</td>${exs.map(x=>{const v=gm(x.id,s,st.id);return `<td class="${v==='AB'||(has(v)&&+v<passMark(x))?'f':''}">${has(v)?v:'–'}</td>`}).join('')}</tr>`).join('')}
+  <tr><th class="l">Total</th>${res.map(r=>`<th>${r.entered?r.tot+' / '+r.max:'–'}</th>`).join('')}</tr>
+  <tr><td class="l">Percentage</td>${res.map(r=>`<td><b>${fmt(r.pct)}</b></td>`).join('')}</tr>
+  <tr><td class="l">Grade</td>${res.map(r=>`<td>${r.entered?grade(r.pct):'–'}</td>`).join('')}</tr>
+  <tr><td class="l">Class rank</td>${rk.map(k=>`<td>${k}</td>`).join('')}</tr>
+  <tr><td class="l">Result</td>${res.map(r=>`<td>${!r.entered?'–':r.fails.length?'<span class="tag bad">Fail</span>':r.complete?'<span class="tag ok">Pass</span>':'<span class="tag w">Incomplete</span>'}</td>`).join('')}</tr></table></div></div>`;
+  const ca=RK.map(R=>R.reduce((a,r)=>a+r.pct,0)/R.length);
+  h+=`<div class="card"><h3>📈 Progress compared to class</h3>${lineChart(exs.map(x=>x.name),[{name:st.name,values:res.map(r=>r.entered?r.pct:null),color:'#2457d6'},{name:'Class average',values:ca,color:'#98a2b3'}])}</div>`;
+  const sp=S.subjects.map(s=>{const p=exs.map(x=>{const v=gm(x.id,s,st.id);return has(v)&&v!=='AB'?v/x.max*100:null}).filter(v=>v!=null);return{s,p:p.length?p.reduce((a,b)=>a+b,0)/p.length:null}}).filter(o=>o.p!=null).sort((a,b)=>b.p-a.p);
+  h+=`<div class="card"><h3>💪 Subject strength (average of all exams)</h3>${bars(sp.map(o=>({label:o.s,value:o.p,text:fmt(o.p)+'%',color:colorFor(o.p)})))}
+  ${sp.length>1?`<p>Strongest: <b class="p">${esc(sp[0].s)}</b><br>Needs more practice: <b class="f">${esc(sp[sp.length-1].s)}</b></p>`:''}
+  <p style="margin-top:24px">Class Teacher: ____________________ &nbsp;&nbsp; Parent: ____________________</p></div>`;
+  return h+`<button class="btn noprint" onclick="print()">🖨️ Print report card</button>`}
+
+/* ---------- BACKUP / EXPORT ---------- */
+function fname(b,ext){return `${b}_${(S.cls||'class').replace(/[^\w-]+/g,'_')}_${new Date().toISOString().slice(0,10)}.${ext}`}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function backup(){S.lastBackup=Date.now();save();dl(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),fname('MarkBook_Backup','json'));render()}
+function restore(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.students)||typeof d.marks!=='object')throw 0;
+    if(!confirm('Restore this backup? It will replace the data on this device ('+d.students.length+' students).'))return;
+    S=Object.assign(blank(),d);save();flash('Backup restored ✓');go('exam')}catch(e){alert('This file is not a valid Mark Book backup.')}inp.value=''};
+  r.readAsText(f)}
+function exportCSV(){
+  const H=['Roll No','Name'];S.exams.forEach(x=>{S.subjects.forEach(s=>H.push(x.name+' - '+s));H.push(x.name+' - Total',x.name+' - %',x.name+' - Result')});
+  const rows=[H];S.students.forEach((st,i)=>{const r=[i+1,st.name];S.exams.forEach(x=>{S.subjects.forEach(s=>{const v=gm(x.id,s,st.id);r.push(has(v)?v:'')});
+    const R=result(x.id,st);r.push(R.entered?R.tot:'',R.entered?R.pct.toFixed(1):'',R.entered?(R.fails.length?'Fail':'Pass'):'')});rows.push(r)});
+  const csv='\ufeff'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  dl(new Blob([csv],{type:'text/csv'}),fname('Marks','csv'))}
+function clearAll(){if(!confirm('Erase ALL students and marks? Please download a backup first.'))return;
+  if(prompt('Type DELETE to confirm')!=='DELETE')return;S=blank();save();go('home')}
+
+/* ---------- SAMPLE CLASS ---------- */
+function loadSample(){
+  if(S.students.length&&!confirm('This will replace your current data with a sample class. Continue?'))return;
+  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  S=blank();S.school='Sample Govt. Hr. Sec. School';S.cls='8 - A (Sample)';S.teacher='Sample Teacher';
+  const N=['Aarav','Divya','Karthik','Priya','Arjun','Meena','Rahul','Sneha','Vignesh','Kavya','Surya','Anitha','Harish','Lakshmi','Manoj','Nithya','Pranav','Revathi','Sanjay','Swathi','Tharun','Varsha','Yogesh','Deepika','Gokul','Ishwarya','Jeeva','Keerthana','Naveen','Pooja'];
+  S.students=N.map((n,i)=>({id:i+1,name:n}));S.nextId=N.length+1;
+  const sb=S.subjects.map(()=>rnd()*12-6);
+  S.students.forEach(st=>{const ab=.32+rnd()*.6,gr=(rnd()-.4)*6;
+    S.exams.slice(0,3).forEach((x,ei)=>S.subjects.forEach((sub,si)=>{const k=x.id+'|'+sub+'|'+st.id;
+      if(rnd()<.02){S.marks[k]='AB';return}
+      const p=Math.max(5,Math.min(100,ab*100+sb[si]+ei*gr+(rnd()-.5)*18));S.marks[k]=Math.round(p/100*x.max)}))});
+  ui.exam='half';save();go('exam')}
+
+/* ---------- RENDER ---------- */
+function render(){
+  if(ui.subj>=S.subjects.length)ui.subj=0;
+  document.getElementById('ht').textContent=S.school||'Class Mark Book';
+  document.getElementById('hs').textContent=[S.cls,S.year].filter(Boolean).join(' · ')||'Marks · Reports · Dashboards';
+  document.getElementById('app').innerHTML={home:vHome,marks:vMarks,exam:vExam,all:vAll,stu:vStu}[tab]();
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==tab))}
+render();
+</script>
+</body>
+</html>
